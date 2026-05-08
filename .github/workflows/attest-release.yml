@@ -23,6 +23,6 @@ jobs:
           gh release download ${{ github.event.release.tag_name }} -D dist/
 
       - name: Attest release artifacts
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*'
