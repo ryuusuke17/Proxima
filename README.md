@@ -63,7 +63,7 @@ https://github.com/user-attachments/assets/d4121fdb-f97e-4d35-846c-5ec7c5249a85
 
 <div align="center">
 
-### 💖 Sponsors
+### 💖 Sponsor Wall
 
 *Proxima keeps evolving thanks to these amazing people*
 
