@@ -18,7 +18,8 @@ function _loadScript(provider) {
         chatgpt: 'chatgpt-engine.js',
         claude: 'claude-engine.js',
         gemini: 'gemini-engine.js',
-        perplexity: 'perplexity-engine.js'
+        perplexity: 'perplexity-engine.js',
+        deepseek: 'deepseek-engine.js'
     };
 
     const filename = scriptMap[provider];
@@ -65,7 +66,8 @@ async function isAPIReady(provider, webContents) {
         chatgpt: 'typeof window.__proximaChatGPT !== "undefined"',
         claude: 'typeof window.__proximaClaude !== "undefined"',
         gemini: 'typeof window.__proximaGemini !== "undefined"',
-        perplexity: 'typeof window.__proximaPerplexity !== "undefined"'
+        perplexity: 'typeof window.__proximaPerplexity !== "undefined"',
+        deepseek: 'typeof window.__proximaDeepSeek !== "undefined"'
     };
 
     const check = checkMap[provider];
@@ -103,7 +105,8 @@ async function sendViaAPI(provider, webContents, message) {
         chatgpt: '__proximaChatGPT',
         claude: '__proximaClaude',
         gemini: '__proximaGemini',
-        perplexity: '__proximaPerplexity'
+        perplexity: '__proximaPerplexity',
+        deepseek: '__proximaDeepSeek'
     };
 
     const apiObj = sendMap[provider];
@@ -149,10 +152,11 @@ async function resetConversation(provider, webContentsGetter) {
         chatgpt: '__proximaChatGPT',
         claude: '__proximaClaude',
         gemini: '__proximaGemini',
-        perplexity: '__proximaPerplexity'
+        perplexity: '__proximaPerplexity',
+        deepseek: '__proximaDeepSeek'
     };
 
-    const providers = provider ? [provider] : ['chatgpt', 'claude', 'gemini', 'perplexity'];
+    const providers = provider ? [provider] : ['chatgpt', 'claude', 'gemini', 'perplexity', 'deepseek'];
 
     for (const p of providers) {
         const apiObj = resetMap[p];

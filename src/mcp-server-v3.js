@@ -154,7 +154,7 @@ function getEnabledProviders() {
     } catch (e) {
         console.error('[MCP] Error reading enabled providers:', e);
     }
-    return new Set(['perplexity', 'chatgpt', 'gemini']);
+    return new Set(['perplexity', 'chatgpt', 'gemini', 'deepseek']);
 }
 
 function isProviderEnabled(provider) {
@@ -411,7 +411,7 @@ class SmartRouter {
 
     async smartQuery(message, preferredProvider = null) {
         const enabled = getEnabledProviders();
-        const order = ['chatgpt', 'claude', 'perplexity', 'gemini'];
+        const order = ['chatgpt', 'claude', 'perplexity', 'gemini', 'deepseek'];
 
         // Start with preferred if enabled
         if (preferredProvider && enabled.has(preferredProvider)) {
@@ -462,8 +462,9 @@ const perplexity = new AIProvider('perplexity', ipcClient);
 const chatgpt = new AIProvider('chatgpt', ipcClient);
 const claude = new AIProvider('claude', ipcClient);
 const gemini = new AIProvider('gemini', ipcClient);
+const deepseek = new AIProvider('deepseek', ipcClient);
 
-const router = new SmartRouter({ perplexity, chatgpt, claude, gemini });
+const router = new SmartRouter({ perplexity, chatgpt, claude, gemini, deepseek });
 
 // Create MCP Server
 const server = new McpServer({
@@ -551,7 +552,7 @@ server.tool(
     {
         query: z.string().describe('Search query or research question'),
         files: z.array(z.string()).optional().describe('Optional: file paths to include as context. Supports line ranges like "path/file.js:10-50". For large files, always specify relevant line ranges only.'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best available')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best available')
     },
     async ({ query, files, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -570,7 +571,7 @@ server.tool(
     'internet_search',
     {
         query: z.string().describe('Search query to look up on the internet'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -587,7 +588,7 @@ server.tool(
     'reddit_search',
     {
         query: z.string().describe('What to search for on Reddit'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -605,7 +606,7 @@ server.tool(
     {
         query: z.string().describe('What to search for on GitHub — repos, code, libraries, or solutions'),
         language: z.string().optional().describe('Programming language filter (e.g., JavaScript, Python, Rust)'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, language, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -626,7 +627,7 @@ server.tool(
         code: z.string().optional().describe('Optional: existing code to analyze and apply design improvements on'),
         files: z.array(z.string()).optional().describe('Optional: file paths of existing code to improve with better UI/UX. Supports line ranges like "path/file.js:10-50"'),
         style: z.string().optional().describe('Design style preference: modern, minimal, glassmorphism, dark, corporate, playful, etc.'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ description, code, files, style, provider: providerName }) => {
         try {
@@ -688,7 +689,7 @@ server.tool(
     {
         query: z.string().describe('News topic to search'),
         timeframe: z.string().optional().describe('Timeframe like "today", "this week", "2024"'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, timeframe, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -707,7 +708,7 @@ server.tool(
     'math_search',
     {
         query: z.string().describe('Math problem or scientific question'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -724,7 +725,7 @@ server.tool(
     'academic_search',
     {
         query: z.string().describe('Academic/research query'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ query, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -744,7 +745,7 @@ server.tool(
     {
         purpose: z.string().describe('Description of what the code should do'),
         code: z.string().optional().describe('Optional code snippet to verify'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ purpose, code, provider: providerName }) => {
         try {
@@ -768,7 +769,7 @@ server.tool(
         code: z.string().optional().describe('The code snippet to explain (or use files parameter)'),
         language: z.string().optional().describe('Programming language'),
         files: z.array(z.string()).optional().describe('Optional: Array of file paths containing code to explain'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ code, language, files, provider: providerName }) => {
         try {
@@ -792,7 +793,7 @@ server.tool(
     {
         description: z.string().describe('What the code should do'),
         language: z.string().optional().describe('Programming language (default: JavaScript)'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ description, language, provider: providerName }) => {
         try {
@@ -816,7 +817,7 @@ server.tool(
         code: z.string().optional().describe('Code to optimize (or use files parameter)'),
         goal: z.string().optional().describe('Optimization goal'),
         files: z.array(z.string()).optional().describe('Optional: Array of file paths containing code to optimize'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ code, goal, files, provider: providerName }) => {
         try {
@@ -841,7 +842,7 @@ server.tool(
         code: z.string().optional().describe('Code to review (or use files parameter)'),
         context: z.string().optional().describe('Context about the code'),
         files: z.array(z.string()).optional().describe('Optional: Array of file paths containing code to review'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ code, context, files, provider: providerName }) => {
         try {
@@ -869,7 +870,7 @@ server.tool(
     {
         url: z.string().describe('The URL to summarize'),
         focus: z.string().optional().describe('Focus area'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ url, focus, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -888,7 +889,7 @@ server.tool(
     {
         topic: z.string().describe('Topic to write about'),
         style: z.string().optional().describe('Writing style'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ topic, style, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -906,7 +907,7 @@ server.tool(
     'brainstorm',
     {
         topic: z.string().describe('Topic to brainstorm ideas for'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ topic, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -924,7 +925,7 @@ server.tool(
     {
         url: z.string().describe('URL of the document'),
         question: z.string().optional().describe('Specific question'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ url, question, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -944,7 +945,7 @@ server.tool(
     {
         content: z.string().describe('Text or URL to extract data from'),
         dataType: z.string().describe('What data to extract'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ content, dataType, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -962,7 +963,7 @@ server.tool(
     {
         request: z.string().describe('What writing help you need'),
         content: z.string().optional().describe('Content to improve'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ request, content, provider: providerName }) => {
         const p = resolveProvider(providerName, 'general');
@@ -985,7 +986,7 @@ server.tool(
     'fact_check',
     {
         claim: z.string().describe('The claim to verify'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ claim, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -1003,7 +1004,7 @@ server.tool(
     {
         topic: z.string().describe('Topic to find statistics about'),
         year: z.string().optional().describe('Specific year'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ topic, year, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -1023,7 +1024,7 @@ server.tool(
         item1: z.string().describe('First item to compare'),
         item2: z.string().describe('Second item to compare'),
         context: z.string().optional().describe('Context for comparison'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ item1, item2, context, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -1041,7 +1042,7 @@ server.tool(
     'how_to',
     {
         task: z.string().describe('What to learn how to do'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ task, provider: providerName }) => {
         const p = resolveProvider(providerName, 'research');
@@ -1335,7 +1336,7 @@ server.tool(
     'chain_query',
     {
         steps: z.array(z.object({
-            provider: z.string().describe('AI provider: chatgpt, claude, gemini, perplexity'),
+            provider: z.string().describe('AI provider: chatgpt, claude, gemini, perplexity, deepseek'),
             prompt: z.string().describe('Prompt for this step. Use {previous} to inject previous step output.')
         })).describe('Array of pipeline steps. Each step receives previous output via {previous} placeholder.'),
         initialContext: z.string().optional().describe('Optional initial context to pass as {previous} to first step')
@@ -1440,7 +1441,7 @@ server.tool(
         task: z.string().describe('What to solve — coding task, bug, feature, anything'),
         files: z.array(z.string()).optional().describe('Optional: file paths for context'),
         language: z.string().optional().describe('Programming language if relevant'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ task, files, language, provider: providerName }) => {
         try {
@@ -1533,7 +1534,7 @@ server.tool(
         code: z.string().optional().describe('Code to audit for security vulnerabilities'),
         files: z.array(z.string()).optional().describe('Optional: file paths to audit'),
         language: z.string().optional().describe('Programming language'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ code, files, language, provider: providerName }) => {
         try {
@@ -1644,7 +1645,7 @@ server.tool(
         error: z.string().describe('Error message or stack trace'),
         file: z.string().optional().describe('File path where the error occurs'),
         context: z.string().optional().describe('Additional context about what you were doing'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ error, file, context: ctx, provider: providerName }) => {
         try {
@@ -1687,7 +1688,7 @@ server.tool(
         description: z.string().describe('What you want to build'),
         constraints: z.string().optional().describe('Tech constraints (e.g., "must use Next.js, PostgreSQL")'),
         scale: z.string().optional().describe('Expected scale (e.g., "10k users", "enterprise")'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ description, constraints, scale, provider: providerName }) => {
         try {
@@ -1729,7 +1730,7 @@ server.tool(
         file: z.string().describe('File path to generate tests for'),
         framework: z.string().optional().describe('Test framework (jest, vitest, mocha, pytest). Default: auto-detect'),
         focus: z.string().optional().describe('Focus area: unit, integration, edge-cases, all'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ file, framework, focus, provider: providerName }) => {
         try {
@@ -1776,7 +1777,7 @@ server.tool(
     {
         error: z.string().describe('Error message or stack trace to explain'),
         context: z.string().optional().describe('What you were doing when the error occurred'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select')
     },
     async ({ error, context: ctx, provider: providerName }) => {
         try {
@@ -1814,7 +1815,7 @@ server.tool(
         code: z.string().optional().describe('Code snippet to convert (if no file)'),
         from: z.string().optional().describe('Source language/framework (auto-detected if not specified)'),
         to: z.string().describe('Target language/framework (e.g., "TypeScript", "Python/FastAPI", "Vue 3")'),
-        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity. Default: auto-select best for coding')
+        provider: z.string().optional().describe('AI provider to use: chatgpt, claude, gemini, perplexity, deepseek. Default: auto-select best for coding')
     },
     async ({ file, code, from, to, provider: providerName }) => {
         try {
@@ -1915,7 +1916,7 @@ server.tool(
 server.tool(
     'conversation_export',
     {
-        provider: z.string().optional().describe('Provider to export from: chatgpt, claude, gemini, perplexity. Default: all enabled')
+        provider: z.string().optional().describe('Provider to export from: chatgpt, claude, gemini, perplexity, deepseek. Default: all enabled')
     },
     async ({ provider }) => {
         try {
@@ -2031,7 +2032,7 @@ server.tool(
     {
         filePath: z.string().describe('Absolute path to the file to analyze'),
         question: z.string().optional().describe('Specific question about the file'),
-        provider: z.string().optional().describe('Which AI to use (chatgpt, claude, gemini, perplexity). Default: claude')
+        provider: z.string().optional().describe('Which AI to use (chatgpt, claude, gemini, perplexity, deepseek). Default: claude')
     },
     async ({ filePath, question, provider: providerName }) => {
         try {

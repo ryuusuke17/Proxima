@@ -32,6 +32,11 @@ class BrowserManager {
                 url: 'https://gemini.google.com/app',
                 partition: 'persist:gemini',
                 color: '#4285f4'
+            },
+            deepseek: {
+                url: 'https://chat.deepseek.com/',
+                partition: 'persist:deepseek',
+                color: '#4F6BED'
             }
         };
 
@@ -429,7 +434,8 @@ class BrowserManager {
                 perplexity: 'perplexity.ai',
                 chatgpt: 'chatgpt.com',
                 claude: 'claude.ai',
-                gemini: 'gemini.google.com'
+                gemini: 'gemini.google.com',
+                deepseek: 'deepseek.com'
             };
 
             const domain = providerDomains[provider];

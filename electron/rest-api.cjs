@@ -467,7 +467,7 @@ function getDocsPage() {
             <div class="logo">⚡ Proxima API</div>
             <p class="sub">Unified AI Gateway · Port ${REST_PORT} · v${VERSION}</p>
             <div class="chips">
-                ${['perplexity', 'chatgpt', 'claude', 'gemini'].map(p =>
+                ${['perplexity', 'chatgpt', 'claude', 'gemini', 'deepseek'].map(p =>
         `<div class="chip ${enabled.includes(p) ? 'on' : 'off'}"><div class="d"></div>${p[0].toUpperCase() + p.slice(1)}</div>`
     ).join('')}
             </div>

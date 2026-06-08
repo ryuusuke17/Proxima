@@ -153,6 +153,10 @@
             background: linear-gradient(135deg, #4285f4, #8ab4f8);
         }
 
+        .tab-icon.deepseek {
+            background: linear-gradient(135deg, #4F6BED, #6C5CE7);
+        }
+
         .tab-icon.settings {
             background: transparent;
             border: none;
@@ -1010,6 +1014,11 @@
             <span class="tab-name">Gemini</span>
             <div class="tab-status offline" id="status-dot-gemini"></div>
         </div>
+        <div class="tab" data-provider="deepseek" onclick="switchTab('deepseek')">
+            <img src="../assets/deepseek.png" class="tab-icon-img" alt="DeepSeek">
+            <span class="tab-name">DeepSeek</span>
+            <div class="tab-status offline" id="status-dot-deepseek"></div>
+        </div>
         <div class="tab-spacer"></div>
         <div class="tab" data-tab="settings" onclick="switchTab('settings')">
             <div class="tab-icon settings">⚙️</div>
@@ -1126,6 +1135,17 @@
                             <div class="provider-card-status not-ready" id="card-status-gemini">Not logged in</div>
                         </div>
                         <div class="toggle-switch active" data-provider="gemini" onclick="toggleProvider(this)"></div>
+                    </div>
+                    <div class="provider-card enabled" data-provider="deepseek">
+                        <div class="provider-card-icon" style="background: transparent;">
+                            <img src="../assets/deepseek.png"
+                                style="width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+                        </div>
+                        <div class="provider-card-info">
+                            <div class="provider-card-name">DeepSeek</div>
+                            <div class="provider-card-status not-ready" id="card-status-deepseek">Not logged in</div>
+                        </div>
+                        <div class="toggle-switch active" data-provider="deepseek" onclick="toggleProvider(this)"></div>
                     </div>
                 </div>
             </div>

@@ -53,7 +53,8 @@ const responseState = {
     perplexity: { fingerprint: '', blockCount: 0 },
     chatgpt: { fingerprint: '' },
     claude: { fingerprint: '' },
-    gemini: { fingerprint: '' }
+    gemini: { fingerprint: '' },
+    deepseek: { fingerprint: '' }
 };
 
 // Default settings
@@ -62,7 +63,8 @@ const defaultSettings = {
         perplexity: { enabled: true, loggedIn: false },
         chatgpt: { enabled: true, loggedIn: false },
         claude: { enabled: false, loggedIn: false },
-        gemini: { enabled: true, loggedIn: false }
+        gemini: { enabled: true, loggedIn: false },
+        deepseek: { enabled: true, loggedIn: false }
     },
     ipcPort: 19222, // Port for MCP server IPC communication
     theme: 'dark',
@@ -182,7 +184,8 @@ async function restoreCookies(provider, ses) {
             perplexity: { domain: 'perplexity.ai', authCookies: ['__Secure-next-auth.session-token', 'pplx_'] },
             chatgpt: { domain: 'openai.com', authCookies: ['__Secure-next-auth.session-token', '__cf_bm'] },
             claude: { domain: 'claude.ai', authCookies: ['sessionKey', '__cf_bm'] },
-            gemini: { domain: 'google.com', authCookies: ['SID', 'HSID', 'SSID', '__Secure-1PSID', '__Secure-3PSID'] }
+            gemini: { domain: 'google.com', authCookies: ['SID', 'HSID', 'SSID', '__Secure-1PSID', '__Secure-3PSID'] },
+            deepseek: { domain: 'deepseek.com', authCookies: ['auth_token', 'deepseek_token', 'session'] }
         };
         const authConfig = providerAuthDomains[provider];
         if (authConfig) {
