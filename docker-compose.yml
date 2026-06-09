@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  proxima:
+    build: .
+    image: proxima-fork:latest
+    container_name: proxima
+    restart: unless-stopped
+    ports:
+      - "3210:3210"   # REST API
+      - "5900:5900"   # VNC (visible mode)
+      - "19222:19222" # IPC (MCP server)
+    environment:
+      - PROXIMA_VNC_ENABLED=true
+      - PROXIMA_REST_PORT=3210
+      - DISPLAY=:99
+    volumes:
+      - proxima-data:/root/.config/proxima
+
+volumes:
+  proxima-data:

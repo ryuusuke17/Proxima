@@ -4,6 +4,8 @@
 const http = require('http');
 const { URL } = require('url');
 const { initWebSocket, getWSStats } = require('./ws-server.cjs');
+const path = require('path');
+const fs = require('fs');
 
 // ─── Config ──────────────────────────────────────────────
 const REST_PORT = parseInt(process.env.PROXIMA_REST_PORT) || 3210;
@@ -1070,6 +1072,300 @@ print(result["content"])</pre>
 </html>`;
 }
 
+// ─── Cookies Page ─────────────────────────────────────────
+function getCookiesPage() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proxima — Inject Cookies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#08080d;color:#d4d4e0;min-height:100vh;line-height:1.6}
+        .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(139,92,246,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.02) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+        .wrap{max-width:800px;margin:0 auto;padding:36px 20px;position:relative;z-index:1}
+        .head{text-align:center;margin-bottom:32px}
+        .logo{font-size:32px;font-weight:700;background:linear-gradient(135deg,#a78bfa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sub{color:#666;font-size:13px;margin-top:4px}
+        .nav{display:flex;justify-content:center;gap:4px;margin-bottom:28px}
+        .nav a{padding:6px 18px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:all .2s;border:1px solid transparent}
+        .nav a.active{background:rgba(139,92,246,.15);color:#a78bfa;border-color:rgba(139,92,246,.3)}
+        .nav a:not(.active){color:#666;background:rgba(16,16,24,.5);border-color:rgba(255,255,255,.05)}
+        .nav a:not(.active):hover{color:#a78bfa;border-color:rgba(139,92,246,.2)}
+        .card{background:rgba(16,16,24,.85);border:1px solid rgba(139,92,246,.1);border-radius:10px;padding:20px;margin-bottom:16px}
+        .card h2{font-size:15px;font-weight:600;color:#c4b5fd;margin-bottom:4px}
+        .card p{font-size:12px;color:#666;margin-bottom:12px}
+        .provider-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+        .provider-tab{padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(139,92,246,.15);background:rgba(16,16,24,.5);color:#888;transition:all .2s}
+        .provider-tab:hover{border-color:rgba(139,92,246,.3);color:#c4b5fd}
+        .provider-tab.active{background:rgba(139,92,246,.12);border-color:#a78bfa;color:#a78bfa}
+        .provider-tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
+        .provider-tab .dot.on{background:#22c55e}
+        .provider-tab .dot.off{background:#555}
+        textarea{width:100%;min-height:180px;background:#0a0a14;border:1px solid rgba(139,92,246,.15);border-radius:8px;color:#a5b4fc;font-family:'JetBrains Mono',monospace;font-size:11px;padding:12px;resize:vertical;outline:none}
+        textarea:focus{border-color:rgba(139,92,246,.4)}
+        .actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+        .btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+        .btn.primary{background:#7c3aed;color:#fff}
+        .btn.primary:hover{background:#6d28d9}
+        .btn.primary:disabled{opacity:.4;cursor:default}
+        .btn.secondary{background:rgba(139,92,246,.08);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+        .btn.secondary:hover{background:rgba(139,92,246,.15)}
+        .btn.success{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
+        .btn.danger{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.15)}
+        .status{padding:10px 14px;border-radius:8px;font-size:12px;margin-top:12px;display:none}
+        .status.success{display:block;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15);color:#22c55e}
+        .status.error{display:block;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:#ef4444}
+        .status.loading{display:block;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.15);color:#a78bfa}
+        .format-hint{font-size:11px;color:#555;margin-top:8px;line-height:1.5}
+        .format-hint code{background:rgba(139,92,246,.06);padding:1px 5px;border-radius:3px;color:#a5b4fc;font-size:10px}
+        .file-upload{position:relative;display:inline-block}
+        .file-upload input[type=file]{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
+        .examples{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+        .example-box{background:rgba(6,6,12,.6);border:1px solid rgba(139,92,246,.08);border-radius:6px;padding:10px;cursor:pointer;transition:all .2s}
+        .example-box:hover{border-color:rgba(139,92,246,.2)}
+        .example-box .ex-name{font-size:11px;color:#a78bfa;font-weight:500}
+        .example-box .ex-desc{font-size:10px;color:#555;margin-top:2px}
+        .line{height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.2),transparent);margin:20px 0}
+        .foot{text-align:center;margin-top:36px;color:#333;font-size:11px}
+        .badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:500}
+        .badge.done{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.15)}
+        .badge.wait{background:rgba(249,115,22,.08);color:#f97316;border:1px solid rgba(249,115,22,.12)}
+        .copy-btn{background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px}
+        .copy-btn:hover{color:#a78bfa;background:rgba(139,92,246,.08)}
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="wrap">
+        <div class="nav">
+            <a href="/">⚡ REST API</a>
+            <a href="/cli">🖥️ CLI</a>
+            <a href="/ws">🔌 WebSocket</a>
+            <a href="/cookies" class="active">🍪 Cookies</a>
+        </div>
+        <div class="head">
+            <div class="logo">🍪 Inject Cookies</div>
+            <p class="sub">Upload or paste cookies from your browser to log into AI providers instantly</p>
+        </div>
+
+        <div class="card">
+            <h2>📋 How to export cookies</h2>
+            <p>Use a browser extension like <b>Cookie-Editor</b> or <b>EditThisCookie</b>, or export from your browser's DevTools → Application → Cookies → Export as JSON.</p>
+            <div class="examples">
+                <div class="example-box" onclick="loadExample('claude')">
+                    <div class="ex-name">🤖 Claude</div>
+                    <div class="ex-desc">claude.ai — sessionKey</div>
+                </div>
+                <div class="example-box" onclick="loadExample('chatgpt')">
+                    <div class="ex-name">💬 ChatGPT</div>
+                    <div class="ex-desc">openai.com — session-token</div>
+                </div>
+                <div class="example-box" onclick="loadExample('perplexity')">
+                    <div class="ex-name">🔍 Perplexity</div>
+                    <div class="ex-desc">perplexity.ai — next-auth</div>
+                </div>
+                <div class="example-box" onclick="loadExample('gemini')">
+                    <div class="ex-name">🧠 Gemini</div>
+                    <div class="ex-desc">google.com — SID/HSID</div>
+                </div>
+                <div class="example-box" onclick="loadExample('deepseek')">
+                    <div class="ex-name">🔬 DeepSeek</div>
+                    <div class="ex-desc">deepseek.com — auth_token</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎯 Select Provider & Inject</h2>
+            <div class="provider-tabs" id="providerTabs">
+                <div class="provider-tab active" data-provider="claude" onclick="selectProvider('claude')"><span class="dot off"></span>Claude</div>
+                <div class="provider-tab" data-provider="chatgpt" onclick="selectProvider('chatgpt')"><span class="dot off"></span>ChatGPT</div>
+                <div class="provider-tab" data-provider="perplexity" onclick="selectProvider('perplexity')"><span class="dot off"></span>Perplexity</div>
+                <div class="provider-tab" data-provider="gemini" onclick="selectProvider('gemini')"><span class="dot off"></span>Gemini</div>
+                <div class="provider-tab" data-provider="deepseek" onclick="selectProvider('deepseek')"><span class="dot off"></span>DeepSeek</div>
+            </div>
+
+            <textarea id="cookieInput" placeholder='Paste your cookie JSON array here...
+
+Example:
+[{"name":"sessionKey","value":"abc123","domain":".claude.ai","path":"/","secure":true,"httpOnly":true}]'></textarea>
+
+            <div class="format-hint">
+                JSON array of cookie objects. Each object: <code>name</code>, <code>value</code>, <code>domain</code>, <code>path</code>, <code>secure</code>, <code>httpOnly</code>, <code>expirationDate</code> (optional).
+                Export from browser DevTools → Cookies → Export, or use a cookie extension. <a href="#" onclick="showHelp()" style="color:#a78bfa">Help</a>
+            </div>
+
+            <div class="actions">
+                <button class="btn primary" id="injectBtn" onclick="injectCookies()">🚀 Inject Cookies</button>
+                <div class="file-upload">
+                    <button class="btn secondary">📁 Upload JSON File</button>
+                    <input type="file" accept=".json" onchange="uploadFile(event)">
+                </div>
+                <button class="btn secondary" onclick="clearCookies()">🗑️ Clear</button>
+            </div>
+
+            <div class="status" id="status"></div>
+        </div>
+
+        <div class="card">
+            <h2>🔒 Current Sessions</h2>
+            <p>Status of each provider's authentication</p>
+            <div id="sessionStatus" style="margin-top:8px">
+                <div style="font-size:12px;color:#555">Click "Check Status" to see login state for each provider.</div>
+            </div>
+            <div class="actions" style="margin-top:12px">
+                <button class="btn secondary" onclick="checkStatus()">🔄 Check Status</button>
+                <button class="btn secondary" onclick="startConversation()">📝 New Conversations</button>
+            </div>
+        </div>
+
+        <div class="line"></div>
+        <div class="foot">Proxima API v${VERSION} — Cookie Injection Tool 🍪</div>
+    </div>
+
+    <script>
+    let selectedProvider = 'claude';
+
+    function selectProvider(p) {
+        selectedProvider = p;
+        document.querySelectorAll('.provider-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.provider === p);
+        });
+    }
+
+    function uploadFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('cookieInput').value = e.target.result;
+            document.getElementById('status').className = 'status';
+            document.getElementById('status').textContent = '';
+        };
+        reader.readAsText(file);
+    }
+
+    async function injectCookies() {
+        const btn = document.getElementById('injectBtn');
+        const status = document.getElementById('status');
+        let raw = document.getElementById('cookieInput').value.trim();
+        if (!raw) { showStatus('error', '❌ Paste or upload cookie JSON first.'); return; }
+
+        let cookies;
+        try { cookies = JSON.parse(raw); } catch {
+            showStatus('error', '❌ Invalid JSON. Check the format and try again.');
+            return;
+        }
+        if (!Array.isArray(cookies)) { showStatus('error', '❌ Must be a JSON array of cookie objects.'); return; }
+        if (cookies.length === 0) { showStatus('error', '❌ Cookie array is empty.'); return; }
+
+        btn.disabled = true;
+        showStatus('loading', '⏳ Injecting cookies for ' + selectedProvider + '...');
+
+        try {
+            const res = await fetch('/v1/cookies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: selectedProvider, cookies })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showStatus('success', '✅ ' + data.cookiesRestored + '/' + data.cookiesStored + ' cookies injected for <b>' + selectedProvider + '</b>. ' + (data.message || ''));
+                updateProviderDot(selectedProvider, true);
+            } else {
+                showStatus('error', '❌ ' + (data.error?.message || 'Injection failed'));
+            }
+        } catch (e) {
+            showStatus('error', '❌ Network error: ' + e.message);
+        }
+        btn.disabled = false;
+    }
+
+    async function checkStatus() {
+        const div = document.getElementById('sessionStatus');
+        div.innerHTML = '<div style="font-size:12px;color:#a78bfa">⏳ Checking...</div>';
+        try {
+            const res = await fetch('/v1/stats');
+            const data = await res.json();
+            const providers = data.providers || {};
+            let html = '<div style="display:grid;gap:6px">';
+            for (const [name, stats] of Object.entries(providers)) {
+                const totalCalls = stats.calls || 0;
+                const dot = totalCalls > 0 ? 'on' : 'off';
+                html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(16,16,24,.5);border-radius:6px;font-size:12px">';
+                html += '<span class="dot ' + dot + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + (dot==='on'?'#22c55e':'#555') + '"></span>';
+                html += '<span style="font-weight:500;color:#c4b5fd;width:100px">' + name + '</span>';
+                html += '<span style="color:#666">' + totalCalls + ' calls · avg ' + (stats.avgTime || '-') + '</span>';
+                html += '</div>';
+            }
+            if (Object.keys(providers).length === 0) {
+                html += '<div style="font-size:12px;color:#555">No provider data yet. Make a request first.</div>';
+            }
+            html += '</div>';
+            div.innerHTML = html;
+        } catch (e) {
+            div.innerHTML = '<div style="font-size:12px;color:#ef4444">❌ ' + e.message + '</div>';
+        }
+    }
+
+    function startConversation() {
+        showStatus('loading', '⏳ Starting new conversations...');
+        fetch('/v1/conversations/new', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) showStatus('success', '✅ ' + (d.message || 'New conversations started'));
+                else showStatus('error', '❌ ' + (d.error?.message || 'Failed'));
+            })
+            .catch(e => showStatus('error', '❌ ' + e.message));
+    }
+
+    function clearCookies() {
+        document.getElementById('cookieInput').value = '';
+        document.getElementById('status').className = 'status';
+        document.getElementById('status').textContent = '';
+    }
+
+    function showStatus(type, msg) {
+        const el = document.getElementById('status');
+        el.className = 'status ' + type;
+        el.innerHTML = msg;
+    }
+
+    function updateProviderDot(provider, on) {
+        const tabs = document.querySelectorAll('.provider-tab');
+        tabs.forEach(t => {
+            if (t.dataset.provider === provider) {
+                t.querySelector('.dot').className = 'dot ' + (on ? 'on' : 'off');
+            }
+        });
+    }
+
+    function showHelp() {
+        alert('To export cookies from your browser:\\n\\n1. Open the website (e.g., claude.ai) and log in\\n2. Open DevTools (F12) → Application → Cookies → Select domain\\n3. Right-click a cookie → "Export as JSON"\\n4. Or use an extension like "Cookie-Editor"\\n5. Copy the JSON array and paste it above');
+    }
+
+    function loadExample(provider) {
+        selectProvider(provider);
+        const examples = {
+            claude: '[{\"name\":\"sessionKey\",\"value\":\"YOUR_SESSION_KEY\",\"domain\":\".claude.ai\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"no_restriction\"},{\"name\":\"__cf_bm\",\"value\":\"YOUR_CF_COOKIE\",\"domain\":\".claude.ai\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"no_restriction\"}]',
+            chatgpt: '[{\"name\":\"__Secure-next-auth.session-token\",\"value\":\"YOUR_TOKEN\",\"domain\":\".openai.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"lax\"},{\"name\":\"__cf_bm\",\"value\":\"YOUR_CF_COOKIE\",\"domain\":\".openai.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true}]',
+            perplexity: '[{\"name\":\"__Secure-next-auth.session-token\",\"value\":\"YOUR_TOKEN\",\"domain\":\".perplexity.ai\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true}]',
+            gemini: '[{\"name\":\"__Secure-1PSID\",\"value\":\"YOUR_SID\",\"domain\":\".google.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true},{\"name\":\"__Secure-3PSID\",\"value\":\"YOUR_SID\",\"domain\":\".google.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true},{\"name\":\"SID\",\"value\":\"YOUR_SID\",\"domain\":\".google.com\",\"path\":\"/\",\"secure\":false,\"httpOnly\":false}]',
+            deepseek: '[{\"name\":\"auth_token\",\"value\":\"YOUR_TOKEN\",\"domain\":\".deepseek.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true}]'
+        };
+        document.getElementById('cookieInput').value = examples[provider] || '';
+        document.getElementById('status').className = 'status';
+        document.getElementById('status').innerHTML = '<span style="color:#666;font-size:11px">✏️ Replace placeholder values with your actual cookies.</span>';
+        document.getElementById('status').style.display = 'block';
+    }
+    </script>
+</body>
+</html>`;
+}
+
 // ─── Route Handler ───────────────────────────────────────
 async function handleRoute(method, pathname, body, res) {
 
@@ -1341,6 +1637,71 @@ End with a security score (0-100).`;
         return;
     }
 
+    // POST /v1/cookies — inject cookies for a provider
+    if (method === 'POST' && pathname === `${API_PREFIX}/cookies`) {
+        try {
+            const { provider, cookies } = body;
+            if (!provider) return sendError(res, 400, '"provider" required (chatgpt, claude, gemini, perplexity, deepseek)');
+            if (!cookies || !Array.isArray(cookies)) return sendError(res, 400, '"cookies" array required');
+            const valid = ['chatgpt', 'claude', 'gemini', 'perplexity', 'deepseek'];
+            if (!valid.includes(provider)) return sendError(res, 400, `Invalid provider. Must be: ${valid.join(', ')}`);
+
+            const { app: ea, session: es } = require('electron');
+            const userDataPath = ea.getPath('userData');
+            const cookieBackupDir = path.join(userDataPath, 'cookie-backups');
+            if (!fs.existsSync(cookieBackupDir)) fs.mkdirSync(cookieBackupDir, { recursive: true });
+
+            const domainMap = { perplexity: '.perplexity.ai', chatgpt: '.openai.com', claude: '.claude.ai', gemini: '.google.com', deepseek: '.deepseek.com' };
+            const backup = {
+                provider, timestamp: Date.now(),
+                cookies: cookies.map(c => ({
+                    name: c.name, value: c.value,
+                    domain: c.domain || domainMap[provider] || `.${provider}.ai`,
+                    path: c.path || '/', secure: c.secure !== false,
+                    httpOnly: c.httpOnly === true, sameSite: c.sameSite || 'no_restriction',
+                    expirationDate: c.expirationDate || (Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60)
+                }))
+            };
+
+            fs.writeFileSync(path.join(cookieBackupDir, `${provider}.json`), JSON.stringify(backup, null, 2));
+
+            // Restore into Electron session immediately
+            const partitionMap = { perplexity: 'persist:perplexity', chatgpt: 'persist:chatgpt', claude: 'persist:claude', gemini: 'persist:gemini', deepseek: 'persist:deepseek' };
+            const part = partitionMap[provider];
+            let restored = 0;
+            if (part) {
+                const ses = es.fromPartition(part, { cache: true });
+                for (const cookie of backup.cookies) {
+                    try {
+                        const domain = cookie.domain.startsWith('.') ? cookie.domain.substring(1) : cookie.domain;
+                        const proto = cookie.secure !== false ? 'https' : 'http';
+                        await ses.cookies.set({
+                            url: `${proto}://${domain}${cookie.path || '/'}`,
+                            name: cookie.name, value: cookie.value, domain: cookie.domain,
+                            path: cookie.path || '/', secure: cookie.secure !== false,
+                            httpOnly: cookie.httpOnly === true, sameSite: cookie.sameSite || 'no_restriction',
+                            expirationDate: Math.max(cookie.expirationDate || 0, Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60)
+                        });
+                        restored++;
+                    } catch (e) { /* skip individual failures */ }
+                }
+                await ses.cookies.flushStore();
+            }
+
+            // Trigger a new conversation to apply cookies immediately
+            try { await handleMCPRequest({ action: 'newConversation', provider: 'all', data: {} }); } catch (e) {}
+
+            sendJSON(res, 200, {
+                success: true, provider,
+                cookiesStored: backup.cookies.length, cookiesRestored: restored,
+                message: restored > 0
+                    ? `✅ ${restored} cookies injected into Electron session. New conversation started.`
+                    : `✅ ${backup.cookies.length} cookies saved to backup (will apply on restart).`
+            });
+        } catch (e) { sendError(res, 500, e.message); }
+        return;
+    }
+
     // Legacy endpoints (still work for backwards compat)
 
     if (method === 'POST' && pathname.startsWith('/api/ask/')) {
@@ -1400,6 +1761,13 @@ End with a security score (0-100).`;
     if (method === 'GET' && (pathname === '/ws' || pathname === '/websocket')) {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
         res.end(getWSDocsPage());
+        return;
+    }
+
+    // Cookie injection page
+    if (method === 'GET' && pathname === '/cookies') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(getCookiesPage());
         return;
     }
 
